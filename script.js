@@ -2559,3 +2559,119 @@ document.addEventListener("DOMContentLoaded",()=>{
     );
 
 })();
+/* =========================================================
+   ORDER CONFIRMATION OVERLAP FIX
+   ========================================================= */
+
+function closeOtherModalsBeforeOrderSuccess() {
+
+    const possibleModals = [
+        "#myOrdersModal",
+        "#ordersModal",
+        "#accountModal",
+        "#customerAccountModal",
+        "#checkoutModal",
+        "#paymentModal"
+    ];
+
+    possibleModals.forEach(function(selector) {
+
+        const modal = document.querySelector(selector);
+
+        if (modal) {
+            modal.classList.remove("active");
+            modal.classList.remove("show");
+
+            if (modal.style.display !== "none") {
+                modal.style.display = "none";
+            }
+        }
+
+    });
+
+}
+
+
+/* Order success দেখানোর সময় অন্য modal বন্ধ করবে */
+document.addEventListener("click", function(event) {
+
+    const button = event.target.closest(
+        "#placeOrderBtn, #confirmOrderBtn, .place-order-btn"
+    );
+
+    if (button) {
+        closeOtherModalsBeforeOrderSuccess();
+    }
+
+});
+/* =========================================================
+   VIEW MY ORDERS + ORDER SUCCESS OVERLAP FIX
+   ========================================================= */
+
+(function () {
+
+    function hideOrderListBehindSuccess() {
+
+        const elements = document.querySelectorAll(
+            'div, section, aside, article, dialog'
+        );
+
+        elements.forEach(function (el) {
+
+            if (el === document.body) return;
+
+            const text = (el.innerText || "").trim();
+
+            /* My Orders লেখা আছে এমন visible modal/overlay খুঁজবে */
+            if (
+                text.includes("My Orders") &&
+                text.length < 3000 &&
+                getComputedStyle(el).position === "fixed"
+            ) {
+                el.style.display = "none";
+                el.classList.remove("active", "show", "open");
+            }
+        });
+    }
+
+
+    /* Order Confirmation আসার পর একটু পরে background My Orders বন্ধ করবে */
+    setTimeout(hideOrderListBehindSuccess, 100);
+    setTimeout(hideOrderListBehindSuccess, 500);
+    setTimeout(hideOrderListBehindSuccess, 1000);
+
+
+    /* View My Orders button চাপলে আগে Confirmation বন্ধ হবে */
+    document.addEventListener("click", function (event) {
+
+        const button = event.target.closest("button, a");
+
+        if (!button) return;
+
+        const buttonText = (button.innerText || "").trim().toLowerCase();
+
+        if (buttonText.includes("view my orders")) {
+
+            /* Order Success/Confirmation modal খুঁজে বন্ধ করবে */
+            document.querySelectorAll(
+                'div, section, aside, dialog'
+            ).forEach(function (el) {
+
+                const text = (el.innerText || "").trim().toLowerCase();
+
+                if (
+                    text.includes("thank you") &&
+                    text.includes("order id") &&
+                    text.includes("view my orders")
+                ) {
+                    el.style.display = "none";
+                    el.classList.remove("active", "show", "open");
+                }
+
+            });
+
+        }
+
+    });
+
+})();

@@ -1784,23 +1784,82 @@ function logoutUser(){
 }
 
 
-function showProfile(){
+function showProfile() {
+  const user = JSON.parse(localStorage.getItem("pahariUser"));
 
-  const user =
-    JSON.parse(
-      localStorage.getItem("pahariUser")
-    );
+  if (!user) {
+    alert("Please login first.");
+    return;
+  }
 
-  if(!user) return;
+  const profileHTML = `
+    <div class="profile-view">
+      <div class="profile-avatar">👤</div>
 
-  alert(
-`My Profile
+      <h2>My Profile</h2>
 
-Name: ${user.name}
-Email: ${user.email}
-Phone: ${user.phone || "Not added"}`
-  );
+      <div class="profile-info">
+        <div>
+          <span>👤</span>
+          <div>
+            <small>Full Name</small>
+            <strong>${user.name || "Not added"}</strong>
+          </div>
+        </div>
 
+        <div>
+          <span>✉️</span>
+          <div>
+            <small>Email</small>
+            <strong>${user.email || "Not added"}</strong>
+          </div>
+        </div>
+
+        <div>
+          <span>📞</span>
+          <div>
+            <small>Phone</small>
+            <strong>${user.phone || "Not added"}</strong>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn primary-btn" onclick="closeProfileView()">
+        Close
+      </button>
+    </div>
+  `;
+
+  let profileModal = document.getElementById("profileViewModal");
+
+  if (!profileModal) {
+    profileModal = document.createElement("div");
+    profileModal.id = "profileViewModal";
+    profileModal.className = "modal-overlay";
+
+    profileModal.innerHTML = `
+      <div class="profile-modal">
+        <button class="modal-close" onclick="closeProfileView()">×</button>
+        <div id="profileViewContent"></div>
+      </div>
+    `;
+
+    document.body.appendChild(profileModal);
+  }
+
+  document.getElementById("profileViewContent").innerHTML = profileHTML;
+
+  closeAccount();
+  profileModal.classList.add("active");
+}
+
+
+function closeProfileView() {
+  const profileModal = document.getElementById("profileViewModal");
+
+  if (profileModal) {
+    profileModal.classList.remove("active");
+  }
 }
 
 
@@ -2557,5 +2616,288 @@ document.addEventListener("DOMContentLoaded",()=>{
     console.log(
         "✅ Disturbed fruit images fixed successfully."
     );
+
+})();
+/* =========================================================
+   ORDER CONFIRMATION OVERLAP FIX
+   ========================================================= */
+
+function closeOtherModalsBeforeOrderSuccess() {
+
+    const possibleModals = [
+        "#myOrdersModal",
+        "#ordersModal",
+        "#accountModal",
+        "#customerAccountModal",
+        "#checkoutModal",
+        "#paymentModal"
+    ];
+
+    possibleModals.forEach(function(selector) {
+
+        const modal = document.querySelector(selector);
+
+        if (modal) {
+            modal.classList.remove("active");
+            modal.classList.remove("show");
+
+            if (modal.style.display !== "none") {
+                modal.style.display = "none";
+            }
+        }
+
+    });
+
+}
+
+
+/* Order success দেখানোর সময় অন্য modal বন্ধ করবে */
+document.addEventListener("click", function(event) {
+
+    const button = event.target.closest(
+        "#placeOrderBtn, #confirmOrderBtn, .place-order-btn"
+    );
+
+    if (button) {
+        closeOtherModalsBeforeOrderSuccess();
+    }
+
+});
+/* =========================================================
+   ORDER CONFIRMATION OVERLAP FIX
+   ========================================================= */
+
+function closeOtherModalsBeforeOrderSuccess() {
+
+    const possibleModals = [
+        "#myOrdersModal",
+        "#ordersModal",
+        "#accountModal",
+        "#customerAccountModal",
+        "#checkoutModal",
+        "#paymentModal"
+    ];
+
+    possibleModals.forEach(function(selector) {
+
+        const modal = document.querySelector(selector);
+
+        if (modal) {
+            modal.classList.remove("active");
+            modal.classList.remove("show");
+
+            if (modal.style.display !== "none") {
+                modal.style.display = "none";
+            }
+        }
+
+    });
+
+}
+
+
+/* Order success দেখানোর সময় অন্য modal বন্ধ করবে */
+document.addEventListener("click", function(event) {
+
+    const button = event.target.closest(
+        "#placeOrderBtn, #confirmOrderBtn, .place-order-btn"
+    );
+
+    if (button) {
+        closeOtherModalsBeforeOrderSuccess();
+    }
+
+});
+/* =========================================================
+   VIEW MY ORDERS + ORDER SUCCESS OVERLAP FIX
+   ========================================================= */
+
+(function () {
+
+    function hideOrderListBehindSuccess() {
+
+        const elements = document.querySelectorAll(
+            'div, section, aside, article, dialog'
+        );
+
+        elements.forEach(function (el) {
+
+            if (el === document.body) return;
+
+            const text = (el.innerText || "").trim();
+
+            /* My Orders লেখা আছে এমন visible modal/overlay খুঁজবে */
+            if (
+                text.includes("My Orders") &&
+                text.length < 3000 &&
+                getComputedStyle(el).position === "fixed"
+            ) {
+                el.style.display = "none";
+                el.classList.remove("active", "show", "open");
+            }
+        });
+    }
+
+
+    /* Order Confirmation আসার পর একটু পরে background My Orders বন্ধ করবে */
+    setTimeout(hideOrderListBehindSuccess, 100);
+    setTimeout(hideOrderListBehindSuccess, 500);
+    setTimeout(hideOrderListBehindSuccess, 1000);
+
+
+    /* View My Orders button চাপলে আগে Confirmation বন্ধ হবে */
+    document.addEventListener("click", function (event) {
+
+        const button = event.target.closest("button, a");
+
+        if (!button) return;
+
+        const buttonText = (button.innerText || "").trim().toLowerCase();
+
+        if (buttonText.includes("view my orders")) {
+
+            /* Order Success/Confirmation modal খুঁজে বন্ধ করবে */
+            document.querySelectorAll(
+                'div, section, aside, dialog'
+            ).forEach(function (el) {
+
+                const text = (el.innerText || "").trim().toLowerCase();
+
+                if (
+                    text.includes("thank you") &&
+                    text.includes("order id") &&
+                    text.includes("view my orders")
+                ) {
+                    el.style.display = "none";
+                    el.classList.remove("active", "show", "open");
+                }
+
+            });
+
+        }
+
+    });
+
+})();
+/* =========================================================
+   PROFILE BUTTON FIX
+   PAHARI FRUITS SHOP
+========================================================= */
+
+(function fixProfileButton() {
+
+    /* Profile দেখানোর function */
+    window.showProfile = function () {
+
+        const user = JSON.parse(
+            localStorage.getItem("pahariUser")
+        );
+
+        if (!user) {
+            showToast("Please register or login first.");
+            return;
+        }
+
+        const phone = user.phone || "Not added";
+
+        alert(
+`My Profile
+
+Name: ${user.name}
+Email: ${user.email}
+Phone: ${phone}`
+        );
+    };
+
+
+    /* ---------------------------------------------------------
+       Profile button-এর click detect করবে
+       --------------------------------------------------------- */
+
+    document.addEventListener("click", function (event) {
+
+        const button = event.target.closest(
+            "button, a, .account-menu-item, [data-account-action]"
+        );
+
+        if (!button) return;
+
+        const text = (
+            button.innerText ||
+            button.textContent ||
+            ""
+        ).trim().toLowerCase();
+
+        const action = (
+            button.dataset.accountAction ||
+            ""
+        ).toLowerCase();
+
+
+        /* Profile */
+        if (
+            action === "profile" ||
+            text === "profile" ||
+            text.includes("my profile")
+        ) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            showProfile();
+
+            return;
+        }
+
+
+        /* My Orders */
+        if (
+            action === "orders" ||
+            text.includes("my orders")
+        ) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            openOrders();
+
+            return;
+        }
+
+
+        /* Wishlist */
+        if (
+            action === "wishlist" ||
+            text.includes("wishlist")
+        ) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            openWishlist();
+
+            return;
+        }
+
+
+        /* Logout */
+        if (
+            action === "logout" ||
+            text.includes("logout") ||
+            text.includes("log out")
+        ) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            logoutUser();
+
+            return;
+        }
+
+    });
+
+
+    console.log("✅ Profile button fixed successfully.");
 
 })();
